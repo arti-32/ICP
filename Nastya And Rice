@@ -1,0 +1,55 @@
+import java.io.*;
+import java.util.*;
+
+public class NastyaAndRice {
+    public static void main(String[] args) throws Exception {
+        FastScanner fs = new FastScanner(System.in);
+        int t = fs.nextInt();
+        StringBuilder sb = new StringBuilder();
+        while (t-- > 0) {
+            long n = fs.nextLong();
+            long a = fs.nextLong();
+            long b = fs.nextLong();
+            long c = fs.nextLong();
+            long d = fs.nextLong();
+
+            long lo = n * (a - b);
+            long hi = n * (a + b);
+            long targetLo = c - d;
+            long targetHi = c + d;
+
+            if (hi < targetLo || targetHi < lo) sb.append("No\n");
+            else sb.append("Yes\n");
+        }
+        System.out.print(sb.toString());
+    }
+
+    // simple fast scanner
+    static class FastScanner {
+        private final InputStream in;
+        private final byte[] buffer = new byte[1 << 16];
+        private int ptr = 0, len = 0;
+        FastScanner(InputStream is) { in = is; }
+        private int read() throws IOException {
+            if (ptr >= len) {
+                len = in.read(buffer);
+                ptr = 0;
+                if (len <= 0) return -1;
+            }
+            return buffer[ptr++];
+        }
+        long nextLong() throws IOException { return Long.parseLong(next()); }
+        int nextInt() throws IOException { return Integer.parseInt(next()); }
+        String next() throws IOException {
+            StringBuilder sb = new StringBuilder();
+            int c;
+            while ((c = read()) <= ' ' && c != -1) {}
+            if (c == -1) return "";
+            do {
+                sb.append((char)c);
+                c = read();
+            } while (c > ' ');
+            return sb.toString();
+        }
+    }
+}
