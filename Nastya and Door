@@ -1,0 +1,34 @@
+import java.util.*;
+public class NastyaAndDoor {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int t = sc.nextInt();
+        while (t-- > 0) {
+            int n = sc.nextInt();
+            int k = sc.nextInt();
+            int[] a = new int[n];
+            for (int i = 0; i < n; i++) a[i] = sc.nextInt();
+
+            int[] isPeak = new int[n];
+            for (int i = 1; i < n - 1; i++) {
+                if (a[i - 1] < a[i] && a[i] > a[i + 1])
+                    isPeak[i] = 1;
+            }
+
+            int[] pref = new int[n + 1];
+            for (int i = 1; i <= n; i++)
+                pref[i] = pref[i - 1] + isPeak[i - 1];
+
+            int maxPeaks = -1, bestL = 0;
+            for (int l = 0; l <= n - k; l++) {
+                int peaks = pref[l + k - 1] - pref[l + 1];
+                if (peaks > maxPeaks) {
+                    maxPeaks = peaks;
+                    bestL = l;
+                }
+            }
+            System.out.println((maxPeaks + 1) + " " + (bestL + 1));
+        }
+        sc.close();
+    }
+}
