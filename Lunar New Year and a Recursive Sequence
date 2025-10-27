@@ -1,0 +1,138 @@
+import java.util.*;
+import java.io.*;
+
+public class Main {
+    static final long MOD = 998244353L;
+    static final long PHI = MOD - 1;  // since MOD is prime
+
+    // multiply two matrices (size k×k) modulo phi
+    static long[][] matMul(long[][] A, long[][] B, int k) {
+        long[][] C = new long[k][k];
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < k; j++) {
+                long sum = 0;
+                for (int t = 0; t < k; t++) {
+                    sum = (sum + A[i][t] * B[t][j]) % PHI;
+                }
+                C[i][j] = sum;
+            }
+        }
+        return C;
+    }
+
+    // matrix exponentiation: compute M^exp mod phi
+    static long[][] matPow(long[][] M, long exp, int k) {
+        long[][] result = new long[k][k];
+        for (int i = 0; i < k; i++)
+            result[i][i] = 1;  // identity
+        long[][] base = M;
+        while (exp > 0) {
+            if ((exp & 1) == 1) {
+                result = matMul(result, base, k);
+            }
+            base = matMul(base, base, k);
+            exp >>= 1;
+        }
+        return result;
+    }
+
+    // fast exponentiation modulo MOD
+    static long modPow(long a, long e, long mod) {
+        long result = 1;
+        a %= mod;
+        while (e > 0) {
+            if ((e & 1) == 1) result = (result * a) % mod;
+            a = (a * a) % mod;
+            e >>= 1;
+        }
+        return result;
+    }
+
+    // extended gcd to solve a*x + b*y = gcd(a,b)
+    static long[] extGcd(long a, long b) {
+        if (b == 0) return new long[]{a, 1, 0};
+        long[] rec = extGcd(b, a % b);
+        long g = rec[0], x = rec[2], y = rec[1] - (a / b) * rec[2];
+        return new long[]{g, x, y};
+    }
+
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        int k = Integer.parseInt(br.readLine().trim());
+        String[] parts = br.readLine().split(" ");
+        long[] b = new long[k];
+        for (int i = 0; i < k; i++) {
+            b[i] = Long.parseLong(parts[i]);
+        }
+        parts = br.readLine().split(" ");
+        long n = Long.parseLong(parts[0]);
+        long m = Long.parseLong(parts[1]);
+
+        // If m == 0, special handling might be needed (in this problem it's assumed positive)
+        // Build transition matrix
+        long[][] M = new long[k][k];
+        for (int i = 0; i < k; i++) {
+            M[0][i] = b[i] % PHI;
+        }
+        for (int i = 1; i < k; i++) {
+            M[i][i-1] = 1;
+        }
+
+        // We want C_n (exponent of f_k in f_n)
+        long Cn;
+        if (n == k) {
+            Cn = 1 % PHI;
+        } else if (n < k) {
+            Cn = 0;  // because f_n = 1 for n<k
+        } else {
+            long[][] Mexp = matPow(M, n - k, k);
+            // initial state vector: C_k = 1, C_{k-1}=0, ..., C_1=0
+            // So C_n = Mexp[0][0]*C_k + … = Mexp[0][0] * 1
+            Cn = Mexp[0][0] % PHI;
+        }
+
+        // We need f_k^{Cn} ≡ m (mod MOD). Find primitive root g, transform m to g^y, then solve for x: x*Cn ≡ y mod (MOD-1)
+        long g = 3;  // known primitive root of 998244353
+        // compute discrete log: find y such that g^y ≡ m (mod MOD)
+        // Because n and k constraints allow, we might need baby-step giant-step
+        long y = discreteLog(g, m, MOD);
+        if (y < 0) {
+            System.out.println(-1);
+            return;
+        }
+
+        // Solve x * Cn ≡ y (mod PHI)
+        long[] eg = extGcd(Cn, PHI);
+        long gcd = eg[0], x0 = eg[1];
+        if (y % gcd != 0) {
+            System.out.println(-1);
+            return;
+        }
+        long modDiv = PHI / gcd;
+        long x = ( (x0 * (y / gcd)) % modDiv + modDiv ) % modDiv;
+
+        long fk = modPow(g, x, MOD);
+        System.out.println(fk);
+    }
+
+    // baby-step giant-step to find discrete log: smallest y ≥ 0 s.t. a^y ≡ target mod p
+    static long discreteLog(long a, long target, long mod) {
+        long m = (long) Math.ceil(Math.sqrt(mod));
+        Map<Long, Long> table = new HashMap<>();
+        long e = 1;
+        for (long j = 0; j < m; j++) {
+            if (!table.containsKey(e))
+                table.put(e, j);
+            e = (e * a) % mod;
+        }
+        long factor = modPow(a, mod-1-m, mod);
+        long cur = target;
+        for (long i = 0; i < m; i++) {
+            if (table.containsKey(cur)) {
+                return i * m + table.get(cur);
+            }
+            cur = (cur * factor) % mod;
+        }
+        return -1;
+    }
+}
