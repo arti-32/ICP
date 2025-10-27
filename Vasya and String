@@ -1,0 +1,46 @@
+import java.io.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        int n = Integer.parseInt(st.nextToken());
+        int k = Integer.parseInt(st.nextToken());
+        char[] s = br.readLine().trim().toCharArray();
+
+        int result = 0;
+
+        // Case 1: try making substring all 'a' (so we convert 'b' to 'a')
+        result = Math.max(result, maxSubstringWithChar(s, n, k, 'a'));
+
+        // Case 2: try making substring all 'b' (convert 'a' to 'b')
+        result = Math.max(result, maxSubstringWithChar(s, n, k, 'b'));
+
+        System.out.println(result);
+    }
+
+    // Returns the maximum length of a substring you can get by converting up to k other-char to targetChar.
+    static int maxSubstringWithChar(char[] s, int n, int k, char targetChar) {
+        int l = 0;
+        int maxLen = 0;
+        int changesUsed = 0;
+
+        for (int r = 0; r < n; r++) {
+            if (s[r] != targetChar) {
+                changesUsed++;
+            }
+            // If we exceed k allowed changes, shift left pointer
+            while (changesUsed > k) {
+                if (s[l] != targetChar) {
+                    changesUsed--;
+                }
+                l++;
+            }
+            // Now [l..r] is valid window
+            maxLen = Math.max(maxLen, r - l + 1);
+        }
+
+        return maxLen;
+    }
+}
